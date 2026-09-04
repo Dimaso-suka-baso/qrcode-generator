@@ -86,28 +86,39 @@ async function generate() {
     statusEl.textContent = "Add content";
     return;
   }
+  
+
+  if (typeof QRCode === "undefined") {
+    statusEl.textContent = "Library error";
+    alert("Library QRCode belum terisi, periksa koneksi/script tag.");
+    return;
+  }
+
   currentData = data;
   statusEl.textContent = "Generating…";
-  const opts = {
-    width: Number(size.value),
-    margin: Number(margin.value),
-    color: { dark: fg.value, light: transparent.checked ? "#00000000" : bg.value },
-    errorCorrectionLevel: "M"
-  };
+
   try {
-    const canvas = document.createElement("canvas");
-    await QRCode.toCanvas(canvas, data, opts);
-    currentCanvas = canvas;
-    currentSvg = await QRCode.toString(data, {...opts, type:"svg"});
-    qrBox.innerHTML = "";
-    canvas.style.width = "100%";
-    canvas.style.height = "100%";
-    canvas.style.objectFit = "contain";
-    qrBox.appendChild(canvas);
-    statusEl.textContent = "Generated";
-    downloadPng.disabled = false;
-    downloadSvg.disabled = false;
-  } catch(e) {
+    qrBox.innerHTML = ""; 
+    const qrcode = new QRCode(qrBox, {
+      text: data,
+      width: Number(size.value),
+      height: Number(size.value),
+      colorDark: fg.value,
+      colorLight: transparent.checked ? "transparent" : bg.value,
+      correctLevel: QRCode.CorrectLevel.M
+    });
+
+    setTimeout(() => {
+      const canvas = qrBox.querySelector("canvas");
+      if (canvas) {
+        currentCanvas = canvas;
+        downloadPng.disabled = false;
+        downloadSvg.disabled = false;
+        statusEl.textContent = "Generated";
+      }
+    }, 50);
+
+  } catch (e) {
     statusEl.textContent = "Could not generate";
     console.error(e);
   }
