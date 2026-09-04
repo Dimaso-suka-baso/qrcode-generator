@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="QR Forge — generator QR code gratis, cepat, responsif, dan tanpa batas.">
+  <title>QR Forge — Free QR Generator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="noise" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="QR Forge">
+      <span class="brand-mark">Q</span>
+      <span>QR<span class="brand-dim">FORGE</span></span>
+    </a>
+    <div class="top-note"><span class="live-dot"></span> Free · Unlimited · No signup</div>
+  </header>
+
+  <main class="shell">
+    <section class="intro">
+      <p class="eyebrow">MAKE IT SCANNABLE</p>
+      <h1>Turn anything into<br><em>a QR code.</em></h1>
+      <p class="lede">Link, text, Wi-Fi, contact, or whatever you need. Generate it instantly and download it without limits.</p>
+    </section>
+
+    <section class="workspace">
+      <div class="panel controls-panel">
+        <div class="panel-head">
+          <div>
+            <span class="kicker">01</span>
+            <h2>Content</h2>
+          </div>
+          <span id="charCount">0 chars</span>
+        </div>
+
+        <div class="tabs" role="tablist" aria-label="QR content type">
+          <button class="tab active" data-type="url">URL</button>
+          <button class="tab" data-type="text">Text</button>
+          <button class="tab" data-type="wifi">Wi-Fi</button>
+          <button class="tab" data-type="contact">Contact</button>
+        </div>
+
+        <div id="formArea"></div>
+
+        <div class="options">
+          <div class="panel-head option-head">
+            <div><span class="kicker">02</span><h2>Style</h2></div>
+          </div>
+          <div class="style-grid">
+            <label>Foreground <input id="fgColor" type="color" value="#101114"></label>
+            <label>Background <input id="bgColor" type="color" value="#ffffff"></label>
+            <label>Size
+              <select id="size">
+                <option value="256">256 px</option>
+                <option value="384" selected>384 px</option>
+                <option value="512">512 px</option>
+                <option value="768">768 px</option>
+              </select>
+            </label>
+            <label>Margin
+              <select id="margin">
+                <option value="0">0 px</option>
+                <option value="2">2 px</option>
+                <option value="4" selected>4 px</option>
+                <option value="8">8 px</option>
+              </select>
+            </label>
+          </div>
+          <label class="check"><input id="transparent" type="checkbox"> Transparent background</label>
+        </div>
+
+        <button id="generate" class="generate">Generate QR <span>↗</span></button>
+      </div>
+
+      <div class="panel preview-panel">
+        <div class="panel-head">
+          <div><span class="kicker">03</span><h2>Preview</h2></div>
+          <span id="status">Ready</span>
+        </div>
+
+        <div class="qr-stage">
+          <div id="qrBox" class="qr-box">
+            <div class="placeholder">
+              <div class="placeholder-icon">⌁</div>
+              <p>Your QR appears here</p>
+              <small>Enter content and hit Generate</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="download-row">
+          <button id="downloadPng" class="download primary" disabled>PNG <span>↓</span></button>
+          <button id="downloadSvg" class="download" disabled>SVG <span>↓</span></button>
+        </div>
+        <p class="privacy"><span>●</span> Everything is generated in your browser. Your content isn't sent to a server.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span>QR FORGE © 2026</span>
+    <span>Built for the web, not for limits.</span>
+  </footer>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
