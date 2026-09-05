@@ -13,7 +13,6 @@ const downloadSvg = document.getElementById("downloadSvg");
 let currentType = "url";
 let currentData = "";
 let currentCanvas = null;
-let currentSvg = "";
 
 const forms = {
   url: `
@@ -51,6 +50,7 @@ function renderForm() {
   });
   updateCount();
 }
+
 function val(id){ return document.getElementById(id)?.value.trim() || ""; }
 function esc(s){ return String(s).replace(/([\\;,:"])/g, "\\$1"); }
 
@@ -67,6 +67,7 @@ function getData() {
   }
   return `BEGIN:VCARD
 VERSION:3.0
+N:${val("name")}
 FN:${val("name")}
 TEL:${val("phone")}
 EMAIL:${val("email")}
@@ -86,11 +87,10 @@ async function generate() {
     statusEl.textContent = "Add content";
     return;
   }
-  
 
   if (typeof QRCode === "undefined") {
     statusEl.textContent = "Library error";
-    alert("Library QRCode belum terisi, periksa koneksi/script tag.");
+    alert("Library QRCode belum terisi. Pastikan script cdnjs sudah terpasang.");
     return;
   }
 
@@ -99,26 +99,34 @@ async function generate() {
 
   try {
     qrBox.innerHTML = ""; 
+
     const qrcode = new QRCode(qrBox, {
       text: data,
       width: Number(size.value),
       height: Number(size.value),
       colorDark: fg.value,
       colorLight: transparent.checked ? "transparent" : bg.value,
-      correctLevel: QRCode.CorrectLevel.M
+      correctLevel: QRCode.CorrectLevel.H 
     });
 
     setTimeout(() => {
       const canvas = qrBox.querySelector("canvas");
       if (canvas) {
         currentCanvas = canvas;
+
+        canvas.style.width = "100%";
+        canvas.style.height = "100%";
+        canvas.style.objectFit = "contain";
+        canvas.style.padding = `${margin.value}px`;
+        canvas.style.backgroundColor = transparent.checked ? "transparent" : bg.value;
+
+        statusEl.textContent = "Generated";
         downloadPng.disabled = false;
         downloadSvg.disabled = false;
-        statusEl.textContent = "Generated";
       }
-    }, 50);
+    }, 100);
 
-  } catch (e) {
+  } catch(e) {
     statusEl.textContent = "Could not generate";
     console.error(e);
   }
@@ -128,33 +136,72 @@ function downloadBlob(blob, name){
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
   a.download = name;
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  document.body.appendChild(a); 
+  a.click(); 
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 
 function safeName(){
-  return "qr-forge-" + new Date().toISOString().slice(0,10);
+  const now = new Date();
+  const dateStr = now.toISOString().slice(0,10).replace(/-/g,"");
+  const timeStr = now.toTimeString().slice(0,8).replace(/:/g,"");
+  const randomHex = Math.floor(Math.random() * 0xffff).toString(16).padStart(4, '0');
+  return `qr-forge-${currentType}-${dateStr}-${timeStr}-${randomHex}`;
 }
 
-document.querySelectorAll(".tab").forEach(tab=>{
-  tab.addEventListener("click",()=>{
-    document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+function canvasToSVG(canvas) {
+  const width = canvas.width;
+  const height = canvas.height;
+  const ctx = canvas.getContext("2d");
+  const imgData = ctx.getImageData(0, 0, width, height).data;
+
+  let pathData = "";
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const idx = (y * width + x) * 4;
+      const alpha = imgData[idx + 3];
+      if (alpha > 128) {
+        pathData += `M${x},${y}h1v1h-1z `;
+      }
+    }
+  }
+
+  const bgColor = transparent.checked ? "none" : bg.value;
+  const svgString = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
+  ${bgColor !== "none" ? `<rect width="100%" height="100%" fill="${bgColor}"/>` : ""}
+  <path d="${pathData}" fill="${fg.value}"/>
+</svg>`;
+
+  return new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+}
+
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
     tab.classList.add("active");
     currentType = tab.dataset.type;
     renderForm();
     statusEl.textContent = "Ready";
   });
 });
-document.getElementById("generate").addEventListener("click", generate);
-[fg,bg,size,margin,transparent].forEach(el=>el.addEventListener("change",()=>{ if(currentData) generate(); }));
 
-downloadPng.addEventListener("click",()=>{
-  if(!currentCanvas) return;
-  currentCanvas.toBlob(blob=>downloadBlob(blob, safeName()+".png"),"image/png");
+document.getElementById("generate").addEventListener("click", generate);
+
+[fg, bg, size, margin, transparent].forEach(el => el.addEventListener("change", () => { 
+  if (currentData) generate(); 
+}));
+
+downloadPng.addEventListener("click", () => {
+  if (!currentCanvas) return;
+  currentCanvas.toBlob(blob => downloadBlob(blob, safeName() + ".png"), "image/png");
 });
-downloadSvg.addEventListener("click",()=>{
-  if(!currentSvg) return;
-  downloadBlob(new Blob([currentSvg],{type:"image/svg+xml;charset=utf-8"}), safeName()+".svg");
+
+downloadSvg.addEventListener("click", () => {
+  if (!currentCanvas) return;
+  const svgBlob = canvasToSVG(currentCanvas);
+  downloadBlob(svgBlob, safeName() + ".svg");
 });
 
 renderForm();
